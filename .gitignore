@@ -1,0 +1,7 @@
+# The user configuration file:
+/config.local
+
+# Different temporary build directories (user-specific):
+/b/
+/build/
+/qtcreator-build/
