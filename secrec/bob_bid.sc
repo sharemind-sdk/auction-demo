@@ -17,7 +17,6 @@
  * For further information, please contact us at sharemind@cyber.ee.
  */
 
-import stdlib;
 import shared3p;
 import keydb;
 import shared3p_keydb;
