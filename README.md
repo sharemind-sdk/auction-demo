@@ -70,6 +70,7 @@ the amount for Bob.
 ### Access control
 
 ## Entering bids into Sharemind
+### Server side
 We start with the SecreC [code][Alicebid] to enter the bid for Alice.
 
 ```c
@@ -132,6 +133,193 @@ Bob's bid.
 [Alicebid]: https://github.com/sharemind-sdk/url/to/file
 [Bobbid]: https://github.com/sharemind-sdk/url/to/file
 
+### Client side
+
+The full [file][bid.cpp] starts with argument parsing using Boost
+program\_options. After that we load the Sharemind Controller configuration with
+the following lines:
+```C++
+if (vm.count("conf")) {
+    config = sm::makeUnique<sm::SystemControllerConfiguration>(
+                 vm["conf"].as<std::string>());
+} else {
+    config = sm::makeUnique<sm::SystemControllerConfiguration>();
+}
+```
+If we have a `"conf"` options specified we give that to the constructor to load the
+configuration from that file, otherwise the client configuration is searched
+from the default locations.
+
+Next we need to set up an `LogHard::Logger` instance:
+
+```C++
+auto logBackend(std::make_shared<LogHard::Backend>());
+logBackend->addAppender(std::make_shared<LogHard::StdAppender>());
+logBackend->addAppender(
+            std::make_shared<LogHard::FileAppender>(
+                "auction-bid.log",
+                LogHard::FileAppender::OVERWRITE));
+const LogHard::Logger logger(logBackend);
+```
+
+After that is done we can create an instance of the `SystemController`, create
+an `IController::ValueMap` instance for the arguments and add an argument called
+"bid", that the SecreC program expects. Note that the `IController::Value`
+constructor also needs the protection domain and type of the argument. The third
+argument to `Value` constructor is of type `std::shared_ptr<void>` and the data
+is used directly as a pointer. Therefore we also need to pass in the size of the
+data. For passing in arrays of data, we would point to the start of the array
+and give the size as `sizeof(sm::Uint64) * lengthOfArray`.
+
+```C++
+sm::SystemControllerGlobals systemControllerGlobals;
+sm::SystemController c(logger, *config);
+
+// Initialize the argument map and set the arguments
+sm::IController::ValueMap arguments;
+
+arguments["bid"] =
+    std::make_shared<sm::IController::Value>(
+        "pd_shared3p",
+        "uint64",
+        std::make_shared<sm::UInt64>(bid),
+        sizeof(sm::UInt64));
+```
+After we are finished with the arguments we just run the right bytecode program
+with the arguments and as a result we will get back the same kind of
+`IController::ValueMap` that we used for the arguments:
+```C++
+sm::IController::ValueMap results = c.runCode(bytecode[bidder], arguments);
+```
+Note that `bytecode[bidder]` evaluates to `"alice_bid.sb"` or `"bob_bid.sb"`
+depending on the command line arguments.
+
+[bid.cpp]: https://github.com/sharemind-sdk/url/to/file
+
 ## Getting the results out of Sharemind
+### Server side
+
+For getting the results the [code][result.sc] is straightforward:
+```C
+import shared3p;
+import keydb;
+import shared3p_keydb;
+import oblivious;
+
+domain pd_shared3p shared3p;
+
+void main() {
+    keydb_connect("dbhost");
+
+    pd_shared3p uint a = keydb_get("a");
+    pd_shared3p uint b = keydb_get("b");
+
+    pd_shared3p bool aliceWon = a > b;
+    pd_shared3p uint winningBid = choose(aliceWon, a, b);
+
+    publish("aliceWon", aliceWon);
+    publish("winningBid", winningBid);
+
+    keydb_disconnect();
+}
+```
+We get the Alice's bid `"a"` and Bob's bid `"b"` from the database and we
+compare them. The `choose` function is a private variant of the C's ternary
+operator (`<cond> ? <true_expr> : <false_expr>`). Note that in this case we
+cannot use the typical `if/else` because that would need a public boolean. The
+`choose` function is defined in the `oblivious` module.
+
+For outputting something from a SecreC program, one has to use the `publish`
+function, which sends the secret shared output back to the client.
+
+[result.sc]: https://github.com/sharemind-sdk/url/to/file
+
+### Client side
+The [C++ code][result.cpp] for getting the result is mostly the same as for
+entering the bid. Just that now we give no arguments to the SecreC program and
+we will get back the published results.
+
+```C++
+sm::SystemControllerGlobals systemControllerGlobals;
+sm::SystemController c(logger, *config);
+
+// Initialize the argument map and set the arguments
+sm::IController::ValueMap arguments;
+
+// Run code
+logger.info() << "Running SecreC bytecode on the servers.";
+sm::IController::ValueMap results = c.runCode("charlie_result.sb", arguments);
+
+// Print the result
+auto aliceWon = results["aliceWon"]->getValue<sm::Bool>();
+auto winningBid = results["winningBid"]->getValue<sm::UInt64>();
+
+logger.info() << "The winner is "
+    << (aliceWon ? "Alice" : "Bob")
+    << ". With a bid of "
+    << winningBid
+    << ".";
+```
+
+[result.cpp]: https://github.com/sharemind-sdk/url/to/file
+
+## Demonstration
+### Alice enters the bid
+```
+$ ./auction-bid -a --bid 1000
+2018.04.26 17:34:50 INFO    [Controller] Loaded controller module 'shared3p' (15 data types, 1 PDKs) from 'libsharemind_mod_shared3p_ctrl.so' using API version 1.
+2018.04.26 17:34:50 INFO    [Controller] Started protection domain 'pd_shared3p' of kind 'shared3p'.
+2018.04.26 17:34:50 INFO    Sending secret shared arguments and running SecreC bytecode on the servers
+2018.04.26 17:34:50 INFO    [Controller][Server DebugMiner1] To 127.0.0.1:30001: Connecting...
+2018.04.26 17:34:50 INFO    [Controller][Server DebugMiner2] To 127.0.0.1:30002: Connecting...
+2018.04.26 17:34:50 INFO    [Controller][Server DebugMiner1] To 127.0.0.1:30001: Connected. Authenticating...
+2018.04.26 17:34:50 INFO    [Controller][Server DebugMiner2] To 127.0.0.1:30002: Connected. Authenticating...
+2018.04.26 17:34:50 INFO    [Controller][Server DebugMiner3] To 127.0.0.1:30003: Connecting...
+2018.04.26 17:34:50 INFO    [Controller][Server DebugMiner3] To 127.0.0.1:30003: Connected. Authenticating...
+2018.04.26 17:34:50 INFO    [Controller][Server DebugMiner1] To 127.0.0.1:30001: Authenticated.
+2018.04.26 17:34:50 INFO    [Controller][Server DebugMiner3] To 127.0.0.1:30003: Authenticated.
+2018.04.26 17:34:50 INFO    [Controller][Server DebugMiner2] To 127.0.0.1:30002: Authenticated.
+2018.04.26 17:34:50 INFO    [Controller] Stopping the network...
+```
+
+### Bob enters the bid
+```
+$ ./auction-bid -b --bid 1100
+2018.04.26 17:35:52 INFO    [Controller] Loaded controller module 'shared3p' (15 data types, 1 PDKs) from 'libsharemind_mod_shared3p_ctrl.so' using API version 1.
+2018.04.26 17:35:52 INFO    [Controller] Started protection domain 'pd_shared3p' of kind 'shared3p'.
+2018.04.26 17:35:52 INFO    Sending secret shared arguments and running SecreC bytecode on the servers
+2018.04.26 17:35:52 INFO    [Controller][Server DebugMiner1] To 127.0.0.1:30001: Connecting...
+2018.04.26 17:35:52 INFO    [Controller][Server DebugMiner3] To 127.0.0.1:30003: Connecting...
+2018.04.26 17:35:52 INFO    [Controller][Server DebugMiner2] To 127.0.0.1:30002: Connecting...
+2018.04.26 17:35:52 INFO    [Controller][Server DebugMiner3] To 127.0.0.1:30003: Connected. Authenticating...
+2018.04.26 17:35:52 INFO    [Controller][Server DebugMiner2] To 127.0.0.1:30002: Connected. Authenticating...
+2018.04.26 17:35:52 INFO    [Controller][Server DebugMiner1] To 127.0.0.1:30001: Connected. Authenticating...
+2018.04.26 17:35:52 INFO    [Controller][Server DebugMiner3] To 127.0.0.1:30003: Authenticated.
+2018.04.26 17:35:52 INFO    [Controller][Server DebugMiner1] To 127.0.0.1:30001: Authenticated.
+2018.04.26 17:35:52 INFO    [Controller][Server DebugMiner2] To 127.0.0.1:30002: Authenticated.
+2018.04.26 17:35:52 INFO    [Controller] Stopping the network...
+```
+
+### Charlie gets the result
+```
+$ ./auction-result
+2018.04.26 17:36:20 INFO    [Controller] Loaded controller module 'shared3p' (15 data types, 1 PDKs) from 'libsharemind_mod_shared3p_ctrl.so' using API version 1.
+2018.04.26 17:36:20 INFO    [Controller] Started protection domain 'pd_shared3p' of kind 'shared3p'.
+2018.04.26 17:36:20 INFO    Running SecreC bytecode on the servers.
+2018.04.26 17:36:20 INFO    [Controller][Server DebugMiner3] To 127.0.0.1:30003: Connecting...
+2018.04.26 17:36:20 INFO    [Controller][Server DebugMiner1] To 127.0.0.1:30001: Connecting...
+2018.04.26 17:36:20 INFO    [Controller][Server DebugMiner2] To 127.0.0.1:30002: Connecting...
+2018.04.26 17:36:20 INFO    [Controller][Server DebugMiner1] To 127.0.0.1:30001: Connected. Authenticating...
+2018.04.26 17:36:20 INFO    [Controller][Server DebugMiner3] To 127.0.0.1:30003: Connected. Authenticating...
+2018.04.26 17:36:20 INFO    [Controller][Server DebugMiner2] To 127.0.0.1:30002: Connected. Authenticating...
+2018.04.26 17:36:20 INFO    [Controller][Server DebugMiner1] To 127.0.0.1:30001: Authenticated.
+2018.04.26 17:36:20 INFO    [Controller][Server DebugMiner3] To 127.0.0.1:30003: Authenticated.
+2018.04.26 17:36:20 INFO    [Controller][Server DebugMiner2] To 127.0.0.1:30002: Authenticated.
+2018.04.26 17:36:20 INFO    The winner is Bob. With a bid of 1100.
+2018.04.26 17:36:20 INFO    [Controller] Stopping the network...
+```
+
+## Running the examples with the Sharemind Emulator
+
 
 ## Conclusion
