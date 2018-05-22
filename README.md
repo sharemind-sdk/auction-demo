@@ -1,6 +1,6 @@
 # Auction demo
 
-This article will be about a small demonstration of using the Sharemind MPC
+This article is about a small demonstration of using the Sharemind MPC
 platform.
 
 ## Storyline
@@ -40,7 +40,7 @@ auction (winner and the amount of winning bid).
 I am not going to give you an [overview of Sharemind][Sharemind overview] in
 general, but I will explain the setup for solving this particular problem. Each
 stakeholder will host a Sharemind Application Server, and in addition, each will
-host a Redis database
+host a Redis database.
 
 The base for the code comes from our [standalone application
 demo][Standalone-demo], however that demo is not very good as there is only one
@@ -335,21 +335,19 @@ $ sharemind-emulator bob_bid.sb --str=bid --str=pd_shared3p --str=uint64 --size=
 ```
 Charlie:
 ```
-$ sharemind-emulator charlie_result.sb | xxd
+$ sharemind-emulator charlie_result.sb | ./argument-stream-decipher.py
 Process returned status: 0
-00000000: 0800 0000 0000 0000 616c 6963 6557 6f6e  ........aliceWon
-00000010: 0b00 0000 0000 0000 7064 5f73 6861 7265  ........pd_share
-00000020: 6433 7004 0000 0000 0000 0062 6f6f 6c01  d3p........bool.
-00000030: 0000 0000 0000 0000 0a00 0000 0000 0000  ................
-00000040: 7769 6e6e 696e 6742 6964 0b00 0000 0000  winningBid......
-00000050: 0000 7064 5f73 6861 7265 6433 7006 0000  ..pd_shared3p...
-00000060: 0000 0000 0075 696e 7436 3408 0000 0000  .....uint64.....
-00000070: 0000 004c 0400 0000 0000 00              ...L.......
+aliceWon = [False]
+winningBid = [1100]
 ```
 
-I used xxd to show the raw bytes of the output. However, there are better tools
-available for deciphering the raw argument stream protocol. (TODO give examples, find those tools)
+Here we piped the emulator output through `argument-stream-decipher.py` to make
+the output human readable. This file is available as part of the emulator
+documentation.
 
 [emulator protocol]: https://github.com/sharemind-sdk/emulator/blob/master/doc/sharemind-emulator.h2m
 
 ## Conclusion
+
+Charlie sold his house to Bob and neither Charlie nor Bob learned the amount
+Alice was willing to pay.
