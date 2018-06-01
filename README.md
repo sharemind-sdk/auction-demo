@@ -43,11 +43,11 @@ stakeholder will host a Sharemind Application Server, and in addition, each will
 host a Redis database.
 
 The base for the code comes from our [standalone application
-demo][Standalone-demo], however that demo is not very good as there is only one
-party that inputs data and also gets the results. In order to use multiple
-inputs from separate stakeholders, we will need to use some kind of data storage
-inside the Sharemind system. At the moment of this writing there are two ways
-for storing data inside the system:
+demo][Standalone-demo], however Standalone-demo is not very good as there is
+only one party that inputs data and also gets the results. In order to use
+multiple inputs from separate stakeholders, we will need to use some kind of
+data storage inside the Sharemind system. At the moment of this writing there
+are two ways for storing data inside the system:
   1. mod\_tabledb -- a tabular storage format based on [HDF5].
   2. mod\_keydb -- an adapter to [Redis] key-value database.
 
@@ -64,6 +64,61 @@ the amount for Bob.
 [Redis]: https://redis.io
 
 ## Sharemind setup
+Note that for casual reading you should skip this section and jump directly to
+[next section](#entering-bids-into-sharemind).
+
+### Keydb module configuration
+In order to use the keydb database module one needs to configure the Sharemind
+application server or emulator to load the database module. Under the modules
+configuration one should add the following:
+
+```INI
+[Module keydb]
+File = libsharemind_mod_keydb.so
+Configuration = keydb.cfg
+```
+
+The configuration string for the module contains the filename for keydb module
+specific configuration is stored. The configuration file for the NoSQL database
+(in this example keydb.cfg) may contain multiple sections, where each section
+describes one Redis host. When using the NoSQL database from Secrec application,
+one has to first connect to one database. An example of the configuration with
+one Redis host follows:
+
+```INI
+; This section defines a new host.
+; Because duplicate section names are not allowed you can use any other string
+; after the initial Host part.
+[Host host]
+; The name to access this host from the SecreC application.
+Name = host
+
+; The hostname were the Redis database is listening.
+Hostname = localhost
+
+; The port number where Redis database is listening.
+; This is optional, when not present it defaults to 6379 which is the default
+; port number for Redis.
+Port = 6371
+
+; Internal parameter, sets the number of items to load per request when
+; streaming keys in keydb_scan and keydb_clean.
+; This is optional, it defaults to 25.
+ScanCount = 25
+
+; Whether to disable overwrites or not. Disabling overwrites ensures that there
+; are no inconsistencies from overwrites that succeed only partially.
+; This is optional, it defaults to false
+DisableOverwrite = false
+```
+
+When using the emulator, one also needs to load the datastoremanager facility.
+This can be done by adding the following to your emulator configuration file.
+```INI
+[FacilityModule datastoremanager]
+File = libsharemind_facility_datastoremanager.so
+#Configuration =
+```
 
 ### Key generation
 
