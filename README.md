@@ -65,7 +65,24 @@ the amount for Bob.
 
 ## Sharemind setup
 Note that for casual reading you should skip this section and jump directly to
-[next section](#entering-bids-into-sharemind).
+the [next section](#entering-bids-into-sharemind).
+
+### Key generation
+Sharmind uses TLS for securing the communications. For TLS and for general
+authentication we use public-key cryptography. To generate key pairs there are
+many options, two of them are listed below.
+
+With OpenSSL
+```sh
+openssl req -x509 -days 3650 -nodes -newkey rsa:4096 -keyout "my-private-key" -out "my-public-key" -outform der
+openssl rsa -in "my-private-key" -out "my-private-key" -outform der
+```
+
+With GnuTLS certtool
+```sh
+./certtool --generate-privkey --rsa --outfile my-private-key --outder
+./certtool --generate-self-signed --load-privkey my-private-key --inder --outfile my-public-key --outder
+```
 
 ### Keydb module configuration
 In order to use the keydb database module one needs to configure the Sharemind
@@ -120,15 +137,48 @@ File = libsharemind_facility_datastoremanager.so
 #Configuration =
 ```
 
-### Key generation
-
 ### Access control
+Sharemind has granual access control. The access control policy can be
+configured based on users, programs and database resources.
+
+First we declare 3 users with the help of the public keys.
+```INI
+[User Alice]
+TlsPublicKeyFile = %{CurrentFileDirectory}/alice-public-key
+[User Bob]
+TlsPublicKeyFile = %{CurrentFileDirectory}/bob-public-key
+[User Charlie]
+TlsPublicKeyFile = %{CurrentFileDirectory}/charlie-public-key
+```
+
+Then we allow them to execute specific SecreC bytecode programs.
+```INI
+[Ruleset sharemind:server]
+execute:alice_bid.sb = Alice
+execute:bob_bid.sb = Bob
+execute:charlie_result.sb = Charlie
+```
+
+And finally we allow access to some key-value pairs in the keydb database.
+```INI
+[Ruleset sharemind:keydb]
+a:write:* = Alice
+b:write:* = Bob
+a:read:* = Charlie
+b:read:* = Charlie
+```
+Note that the last star in the keydb rules means that Alice can write to "a"
+with every program Alice is allowed to run. To be more specific one can also
+write-out the program name.
+```INI
+a:write:alice_bid.sb = Alice
+```
 
 ## Entering bids into Sharemind
 ### Server side
 We start with the SecreC [code][Alicebid] to enter the bid for Alice.
 
-```c
+```C
 import shared3p;
 import keydb;
 import shared3p_keydb;
