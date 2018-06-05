@@ -67,6 +67,14 @@ the amount for Bob.
 Note that for casual reading you should skip this section and jump directly to
 the [next section](#entering-bids-into-sharemind).
 
+I am not going to go over the whole Sharemind configuration, because this should
+be covered elsewhere.
+
+However I will go over the following:
+ * [key pair generation](#key-generation)
+ * [keydb module configuration](#keydb-module-configuration)
+ * [access control](#access-control)
+
 ### Key generation
 Sharmind uses TLS for securing the communications. For TLS and for general
 authentication we use public-key cryptography. To generate key pairs there are
@@ -92,15 +100,14 @@ configuration one should add the following:
 ```INI
 [Module keydb]
 File = libsharemind_mod_keydb.so
-Configuration = keydb.cfg
+Configuration = %{CurrentFileDirectory}/keydb.conf
 ```
 
-The configuration string for the module contains the filename for keydb module
-specific configuration is stored. The configuration file for the NoSQL database
-(in this example keydb.cfg) may contain multiple sections, where each section
-describes one Redis host. When using the NoSQL database from Secrec application,
-one has to first connect to one database. An example of the configuration with
-one Redis host follows:
+The configuration string for the module points to the file, where keydb module
+specific configuration is stored. The configuration file for the keydb may
+contain multiple sections, where each section describes one Redis host. When
+using the keydb from Secrec application, one has to first connect to one
+database. An example of the configuration with one Redis host follows:
 
 ```INI
 ; This section defines a new host.
@@ -108,7 +115,7 @@ one Redis host follows:
 ; after the initial Host part.
 [Host host]
 ; The name to access this host from the SecreC application.
-Name = host
+Name = dbhost
 
 ; The hostname were the Redis database is listening.
 Hostname = localhost
@@ -116,7 +123,7 @@ Hostname = localhost
 ; The port number where Redis database is listening.
 ; This is optional, when not present it defaults to 6379 which is the default
 ; port number for Redis.
-Port = 6371
+Port = 6379
 
 ; Internal parameter, sets the number of items to load per request when
 ; streaming keys in keydb_scan and keydb_clean.
@@ -206,10 +213,9 @@ Then we have the definition of the security domain `pd_shared3p` of kind
 kinds, but for now you can mostly ignore that, because officially we offer only
 one protection domain kind: `shared3p`.
 
-We have the main entry point of the program and as people used to C, this is
-called `main`, however unlike C the arguments to the SecreC program are not
-given as parameters of `main`, but they can be obtained using the
-`argument(string)` function.
+The main entry point of the program is called `main` just like in C, however the
+arguments to the SecreC program are not given as parameters of `main`, but they
+can be obtained using the `argument(string)` function.
 
 At first we establish connection to the Redis server by using the
 `keydb_connect(string)` function. Note that the name *dbhost* must match the
@@ -227,22 +233,22 @@ In the end we close the connection to Redis, but this is actually not needed in
 this specific example, because the program is finished and the resources get
 freed anyway.
 
-For Bob the [file][Bobbid] is almost identical, the only difference is:
-```
+For Bob the [SecreC program][Bobbid] is almost identical, the only difference is:
+```diff
 -     keydb_set("a", b);
 +     keydb_set("b", b);
 ```
-Instead of storing to variable "a" we store the bid to "b", which corresponds to
-Bob's bid.
+Instead of storing the bid to the database with key "a" we store the bid to "b",
+which corresponds to Bob's bid.
 
 [Alicebid]: https://github.com/sharemind-sdk/url/to/file
 [Bobbid]: https://github.com/sharemind-sdk/url/to/file
 
 ### Client side
 
-The full [file][bid.cpp] starts with argument parsing using Boost
-program\_options. After that we load the Sharemind Controller configuration with
-the following lines:
+The corresponding [C++ client application][bid.cpp] starts with argument parsing
+using [Boost's program\_options][progopt]. After that we load the Sharemind
+Controller configuration with the following lines:
 ```C++
 if (vm.count("conf")) {
     config = sm::makeUnique<sm::SystemControllerConfiguration>(
@@ -253,7 +259,10 @@ if (vm.count("conf")) {
 ```
 If we have a `"conf"` options specified we give that to the constructor to load the
 configuration from that file, otherwise the client configuration is searched
-from the default locations.
+from the default locations, which on my machine are:
+ * "/home/karl/.config/sharemind/client.conf",
+ * "/etc/xdg/sharemind/client.conf",
+ * "/etc/sharemind/client.conf".
 
 Next we need to set up an `LogHard::Logger` instance:
 
@@ -267,14 +276,15 @@ logBackend->addAppender(
 const LogHard::Logger logger(logBackend);
 ```
 
-After that is done we can create an instance of the `SystemController`, create
-an `IController::ValueMap` instance for the arguments and add an argument called
-"bid", that the SecreC program expects. Note that the `IController::Value`
-constructor also needs the protection domain and type of the argument. The third
-argument to `Value` constructor is of type `std::shared_ptr<void>` and the data
-is used directly as a pointer. Therefore we also need to pass in the size of the
-data. For passing in arrays of data, we would point to the start of the array
-and give the size as `sizeof(sm::Uint64) * lengthOfArray`.
+After that is done we can create an instance of the `SystemController` and then
+create an `IController::ValueMap` instance for the arguments. We add an argument
+called "bid", that the SecreC program expects. Note that the
+`IController::Value` constructor also needs the protection domain and type of
+the argument. The third argument to `Value` constructor is of type
+`std::shared_ptr<void>` and the data is used directly as a pointer. Therefore we
+also need to pass in the size of the data. For passing in arrays of data, we
+would point to the start of the array and give the size as `sizeof(sm::Uint64) *
+lengthOfArray`.
 
 ```C++
 sm::SystemControllerGlobals systemControllerGlobals;
@@ -300,6 +310,7 @@ Note that `bytecode[bidder]` evaluates to `"alice_bid.sb"` or `"bob_bid.sb"`
 depending on the command line arguments.
 
 [bid.cpp]: https://github.com/sharemind-sdk/url/to/file
+[progopt]: https://www.boost.org/doc/libs/1_67_0/doc/html/program_options.html
 
 ## Getting the results out of Sharemind
 ### Server side
@@ -456,3 +467,9 @@ documentation.
 
 Charlie sold his house to Bob and neither Charlie nor Bob learned the amount
 Alice was willing to pay.
+
+I have shown that it is not that hard to write privacy preserving application
+with the Sharemind MPC platform. The code itself is quite simple and the hardest
+part is organizational. All parties must coordinate to configure the servers,
+generate keys for themselves and the servers and then exchange the public keys.
+However, we have some things in the pipeline that simplify that coordination.
