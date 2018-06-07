@@ -71,7 +71,7 @@ interested in the general use case, you should skip this section and jump
 directly to the [next section](#entering-bids-into-sharemind).
 
 I am not going to go over the whole Sharemind MPC configuration, because this
-should be covered elsewhere.
+should be covered in the manuals shipped with the platform.
 
 However I will go over the following:
  * [key pair generation](#key-generation)
@@ -210,12 +210,16 @@ At the start we have some imports, which I will explain:
   * keydb -- for the keydb functions using public data (in our case
     `keydb_connect(string)` and `keydb_close()`).
   * shared3p_keydb -- for the keydb functions specialized for shared3p
-    protection domain (`keydb_set`).
+    protection domain kind (`keydb_set`).
 
 Then we have the definition of the security domain `pd_shared3p` of kind
 `shared3p`. In general, you can have multiple security domains with different
 kinds, but for now you can mostly ignore that, because we use only one
 protection domain kind: `shared3p`.
+
+By the way `shared3p` means that data is secret shared between 3 parties and the
+cryptographic protocols are secure in the passive (_honest-but-curious_) security
+model.
 
 The main entry point of the program is called `main` just like in C, however
 the arguments to the SecreC program are not given as parameters of `main`, but
@@ -281,15 +285,19 @@ logBackend->addAppender(
 const LogHard::Logger logger(logBackend);
 ```
 
-After that is done we can create an instance of the `SystemController` and then
-create an `IController::ValueMap` instance for the arguments. We add an
+After that is done, we can create an instance of the `SystemController` and
+then create an `IController::ValueMap` instance for the arguments. We add an
 argument called "bid", that the SecreC program expects. Note that the
 `IController::Value` constructor also needs the protection domain and type of
 the argument. The third argument to `Value` constructor is of type
 `std::shared_ptr<void>` and the data is used directly as a pointer. Therefore
 we also need to pass in the size of the data. For passing in arrays of data, we
-would point to the start of the array and give the size as `sizeof(sm::Uint64)
-* lengthOfArray`.
+would point to the start of the array and give the size as
+`sizeof(sm::Uint64) * lengthOfArray`.
+
+Note: if conversion from `std::shared_ptr<sm::Uint64>' to
+`std::shared_ptr<void>` is confusing, you should read [this
+explanation][voidptr].
 
 ```C++
 sm::SystemControllerGlobals systemControllerGlobals;
@@ -317,6 +325,7 @@ depending on the command line arguments.
 
 [bid.cpp]: https://github.com/sharemind-sdk/url/to/file
 [progopt]: https://www.boost.org/doc/libs/1_67_0/doc/html/program_options.html
+[voidptr]: http://shanekirk.com/2017/11/c-stdshared_ptrvoid/
 
 ## Getting the results out of Sharemind
 ### Server side
