@@ -18,6 +18,7 @@
  */
 
 #include <boost/program_options.hpp>
+#include <cstdint>
 #include <iostream>
 #include <LogHard/Backend.h>
 #include <LogHard/FileAppender.h>
@@ -101,15 +102,15 @@ int main(int argc, char ** argv) {
         sm::SystemController c(logger, *config);
 
         // Initialize the argument map and set the arguments
-        sm::IController::ValueMap arguments;
+        sm::SystemController::ValueMap arguments;
 
         // Run code
         logger.info() << "Running SecreC bytecode on the servers.";
-        sm::IController::ValueMap results = c.runCode("charlie_result.sb", arguments);
+        sm::SystemController::ValueMap results = c.runCode("charlie_result.sb", arguments);
 
         // Print the result
-        auto aliceWon = results["aliceWon"]->getValue<sm::Bool>();
-        auto winningBid = results["winningBid"]->getValue<sm::UInt64>();
+        bool aliceWon = results["aliceWon"]->getValue<std::uint8_t>();
+        auto winningBid = results["winningBid"]->getValue<std::uint64_t>();
 
         logger.info() << "The winner is "
             << (aliceWon ? "Alice" : "Bob")
@@ -118,7 +119,7 @@ int main(int argc, char ** argv) {
             << ".";
 
         return EXIT_SUCCESS;
-    } catch (const sm::IController::WorkerException & e) {
+    } catch (const sm::SystemController::WorkerException & e) {
         logger.fatal() << "Multiple exceptions caught:";
         for (size_t i = 0u; i < e.numWorkers(); i++) {
             if (std::exception_ptr ep = e.nested_ptrs()[i]) {

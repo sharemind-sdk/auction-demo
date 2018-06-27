@@ -286,9 +286,9 @@ const LogHard::Logger logger(logBackend);
 ```
 
 After that is done, we can create an instance of the `SystemController` and
-then create an `IController::ValueMap` instance for the arguments. We add an
+then create an `SystemController::ValueMap` instance for the arguments. We add an
 argument called "bid", that the SecreC program expects. Note that the
-`IController::Value` constructor also needs the protection domain and type of
+`SystemController::Value` constructor also needs the protection domain and type of
 the argument. The third argument to `Value` constructor is of type
 `std::shared_ptr<void>` and the data is used directly as a pointer. Therefore
 we also need to pass in the size of the data. For passing in arrays of data, we
@@ -304,21 +304,21 @@ sm::SystemControllerGlobals systemControllerGlobals;
 sm::SystemController c(logger, *config);
 
 // Initialize the argument map and set the arguments
-sm::IController::ValueMap arguments;
+sm::SystemController::ValueMap arguments;
 
 arguments["bid"] =
-    std::make_shared<sm::IController::Value>(
+    std::make_shared<sm::SystemController::Value>(
         "pd_shared3p",
         "uint64",
-        std::make_shared<sm::UInt64>(bid),
-        sizeof(sm::UInt64));
+        std::make_shared<std::uint64_t>(bid),
+        sizeof(std::uint64_t));
 ```
 After we are finished with the arguments we just run the right bytecode program
 with the arguments and as a result we will get back the same kind of
-`IController::ValueMap` that we used for the arguments:
+`SystemController::ValueMap` that we used for the arguments:
 
 ```C++
-sm::IController::ValueMap results = c.runCode(bytecode[bidder], arguments);
+sm::SystemController::ValueMap results = c.runCode(bytecode[bidder], arguments);
 ```
 Note that `bytecode[bidder]` evaluates to `"alice_bid.sb"` or `"bob_bid.sb"`
 depending on the command line arguments.
@@ -376,15 +376,15 @@ sm::SystemControllerGlobals systemControllerGlobals;
 sm::SystemController c(logger, *config);
 
 // Initialize the argument map and set the arguments
-sm::IController::ValueMap arguments;
+sm::SystemController::ValueMap arguments;
 
 // Run code
 logger.info() << "Running SecreC bytecode on the servers.";
-sm::IController::ValueMap results = c.runCode("charlie_result.sb", arguments);
+sm::SystemController::ValueMap results = c.runCode("charlie_result.sb", arguments);
 
 // Print the result
-auto aliceWon = results["aliceWon"]->getValue<sm::Bool>();
-auto winningBid = results["winningBid"]->getValue<sm::UInt64>();
+bool aliceWon = results["aliceWon"]->getValue<std::uint8_t>();
+auto winningBid = results["winningBid"]->getValue<std::uint64_t>();
 
 logger.info() << "The winner is "
     << (aliceWon ? "Alice" : "Bob")

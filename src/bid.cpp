@@ -18,6 +18,7 @@
  */
 
 #include <boost/program_options.hpp>
+#include <cstdint>
 #include <iostream>
 #include <LogHard/Backend.h>
 #include <LogHard/FileAppender.h>
@@ -137,21 +138,21 @@ int main(int argc, char ** argv) {
         sm::SystemController c(logger, *config);
 
         // Initialize the argument map and set the arguments
-        sm::IController::ValueMap arguments;
+        sm::SystemController::ValueMap arguments;
 
         arguments["bid"] =
-            std::make_shared<sm::IController::Value>(
+            std::make_shared<sm::SystemController::Value>(
                 "pd_shared3p",
                 "uint64",
-                std::make_shared<sm::UInt64>(bid),
-                sizeof(sm::UInt64));
+                std::make_shared<std::uint64_t>(bid),
+                sizeof(std::uint64_t));
 
         // Run code
         logger.info() << "Sending secret shared arguments and running SecreC bytecode on the servers";
-        sm::IController::ValueMap results = c.runCode(bytecode[bidder], arguments);
+        sm::SystemController::ValueMap results = c.runCode(bytecode[bidder], arguments);
 
 
-    } catch (const sm::IController::WorkerException & e) {
+    } catch (const sm::SystemController::WorkerException & e) {
         logger.fatal() << "Multiple exceptions caught:";
         for (size_t i = 0u; i < e.numWorkers(); i++) {
             if (std::exception_ptr ep = e.nested_ptrs()[i]) {
