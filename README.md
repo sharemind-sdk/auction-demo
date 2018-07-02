@@ -28,11 +28,10 @@ easy for Bob to persuade Charlie to give him information about the amount Alice
 was willing to pay. That information would give Bob an edge over Alice in future
 deals. In short, Alice does not trust Charlie to keep the losing bid to himself.
 
-Now we have a problem that is suitable for solving with Sharemind.
-
-We need an application that allows Alice and Bob to enter their bids into the
-Sharemind system and another application for Charlie to determine the outcome of
-the auction (the winner and the value of the winning bid).
+Now they have a problem that is suitable for solving with Sharemind and we will
+help them. We need an application that allows Alice and Bob to enter their bids
+into the Sharemind system and another application for Charlie to determine the
+outcome of the auction (the winner and the value of the winning bid).
 
 [Alice and Bob]: https://en.wikipedia.org/wiki/Alice_and_Bob
 [Sharemind problem]: https://sharemind.cyber.ee/what-is-a-sharemind-problem/
