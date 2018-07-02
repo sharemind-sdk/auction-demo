@@ -16,11 +16,11 @@ Alice and Bob both want to make a bid, but since they are competing in the same
 district, they do not want to reveal their bids. So Charlie proposes to hold a
 closed auction.
 
-So far Sharemind is not yet needed: Alice and Bob can write their bids on a
-piece of paper, put them into an envelope, seal the envelope and give it to
-Charlie, who will determine the winner. Charlie promises not to reveal the
-losing bid. [Not every problem needs to be solved with Sharemind][Sharemind
-problem].
+So far Sharemind is not yet needed: Alice and Bob can both follow a simple
+procedure: write their bid on a piece of paper, put it into an envelope, seal
+the envelope and give it to Charlie. Charlie would open the envelopes and
+determine the winner. Charlie promises not to reveal the losing bid. [Not every
+problem needs to be solved with Sharemind][Sharemind problem].
 
 However, Alice is not happy with that plan. She is afraid that if Bob wins the
 auction and is going to celebrate the house deal with Charlie, it would be very
@@ -169,7 +169,7 @@ execute:bob_bid.sb = Bob
 execute:charlie_result.sb = Charlie
 ```
 
-And finally, we allow access to some key-value pairs in the keydb database.
+Finally, we allow access to some key-value pairs in the keydb database.
 ```INI
 [Ruleset sharemind:keydb]
 a:write:* = Alice
