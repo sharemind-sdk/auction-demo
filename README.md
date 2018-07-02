@@ -1,6 +1,7 @@
-# Auction demo
+# Auction demo - a tutorial on using the Sharemind MPC platform
 
-This is a small tutorial on using the Sharemind MPC platform.
+This time our blog post features a small tutorial on using the Sharemind MPC
+platform.
 
 ## Storyline
 
@@ -9,37 +10,36 @@ I chose a very simple problem that has 3 stakeholders: Alice, Bob and Charlie
 cryptographers][Alice and Bob]).
 
 The story goes that Charlie wants to sell his house on the beach. Potential
-buyers are Alice and Bob, who both are real-estate speculators who compete with
-each-other. Charlie is interested in the highest bidder and wants to hold an
-auction. Alice and Bob both want to make a bid, but since they are competing in
-the same district they do not want to reveal their bids. So Charlie proposes to
-make the auction closed.
+buyers are Alice and Bob, both real estate speculators who compete with each
+other. Charlie is interested in the highest bidder and wants to hold an auction.
+Alice and Bob both want to make a bid, but since they are competing in the same
+district, they do not want to reveal their bids. So Charlie proposes to hold a
+closed auction.
 
-So far Sharemind is still not needed: Alice and Bob can write their bids on a
-piece of paper, put it into an envelope, close the envelope and give it to
-Charlie, who will determine the winner. Charlie promises to not reveal the
+So far Sharemind is not yet needed: Alice and Bob can write their bids on a
+piece of paper, put them into an envelope, seal the envelope and give it to
+Charlie, who will determine the winner. Charlie promises not to reveal the
 losing bid. [Not every problem needs to be solved with Sharemind][Sharemind
 problem].
 
 However, Alice is not happy with that plan. She is afraid that if Bob wins the
 auction and is going to celebrate the house deal with Charlie, it would be very
-easy for Bob to persuade Charlie into giving him information about the amount
-Alice was willing to pay. That information would give Bob an edge over Alice in
-future deals. In short, Alice does not trust Charlie to keep the losing bid to
-himself.
+easy for Bob to persuade Charlie to give him information about the amount Alice
+was willing to pay. That information would give Bob an edge over Alice in future
+deals. In short, Alice does not trust Charlie to keep the losing bid to himself.
 
-And now we have a problem, that is suitable for solving with Sharemind.
+Now we have a problem that is suitable for solving with Sharemind.
 
 We need an application that allows Alice and Bob to enter their bids into the
-Sharemind system and another application for Charlie to determine the outcome
-of the auction (winner and the value of winning bid).
+Sharemind system and another application for Charlie to determine the outcome of
+the auction (the winner and the value of the winning bid).
 
 [Alice and Bob]: https://en.wikipedia.org/wiki/Alice_and_Bob
 [Sharemind problem]: https://sharemind.cyber.ee/what-is-a-sharemind-problem/
 
 ## System architecture
 I am not going to give you an [overview of Sharemind MPC][Sharemind MPC
-overview] in general, but I will explain the setup for solving this particular
+overview] in general, but rather explain the setup for solving this particular
 problem. Each stakeholder will host a Sharemind Application Server, and in
 addition, each will host a Redis database.
 
@@ -47,9 +47,8 @@ The base for the code comes from our [C++ client application
 demo][Standalone-demo], however the latter is not very descriptive as there is
 only one party that inputs data and also gets the results. In order to use
 multiple inputs from separate stakeholders, we will need to use some kind of
-data storage inside the Sharemind MPC system. At the time of writing this,
-there are two options for persistent data storage in Sharemind Application
-Server:
+data storage inside the Sharemind MPC system. At the time of writing this, there
+are two options for persistent data storage in the Sharemind Application Server:
   1. mod\_tabledb -- a table-based storage format based on [HDF5].
   2. mod\_keydb -- an adapter to [Redis] key-value database.
 
@@ -57,7 +56,7 @@ I chose to keep the code simple and used mod\_keydb, although it requires each
 stakeholder to also host a Redis server.
 
 The data model is very simple, there are two variables named "a" and "b" in the
-key-value database. The first holds the bid for Alice and the second, "b" holds
+key-value database. The first holds the bid for Alice and the second, "b", holds
 the amount for Bob.
 
 [Sharemind MPC overview]: https://sharemind.cyber.ee/sharemind-mpc/multi-party-computation/
@@ -66,22 +65,22 @@ the amount for Bob.
 [Redis]: https://redis.io
 
 ## Sharemind MPC setup
-Note, that if you are not following the tutorial step-by-step and are only
+Note that if you are not following the tutorial step-by-step and are only
 interested in the general use case, you should skip this section and jump
 directly to the [next section](#entering-bids-into-sharemind).
 
 I am not going to go over the whole Sharemind MPC configuration, because this
 should be covered in the manuals shipped with the platform.
 
-However I will go over the following:
+However, I will cover the following:
  * [key pair generation](#key-generation)
  * [keydb module configuration](#keydb-module-configuration)
  * [access control](#access-control)
 
 ### Key generation
-Sharemind MPC uses TLS for securing the communications. For TLS and for general
-authentication we use public-key cryptography. To generate key pairs there are
-many options, two of them are listed below.
+Sharemind MPC uses TLS for securing the communications. We use public-key
+cryptography for TLS and for general authentication. There are many options to
+generate key pairs, two of them are listed below.
 
 With OpenSSL
 ```sh
@@ -96,9 +95,9 @@ With GnuTLS `certtool`
 ```
 
 ### Keydb module configuration
-In order to use the keydb database module one needs to configure the Sharemind
-Application Server or Emulator to load the database module. Under the modules
-configuration one should add the following:
+In order to use the keydb database module, one needs to configure the Sharemind
+Application Server or Emulator to load the database module. One should add the
+following under the modules configuration:
 
 ```INI
 [Module keydb]
@@ -106,7 +105,7 @@ File = libsharemind_mod_keydb.so
 Configuration = %{CurrentFileDirectory}/keydb.conf
 ```
 
-The configuration string for the module points to the file, where keydb module
+The configuration string for the module points to the file where keydb module
 specific configuration is stored. The configuration file for the keydb may
 contain multiple sections, where each section describes one Redis host. When
 using the keydb module from a SecreC application, one has to first connect to
@@ -139,7 +138,7 @@ ScanCount = 25
 DisableOverwrite = false
 ```
 
-When using the Emulator, one also needs to load the datastoremanager facility.
+When using the Emulator, one also needs to load the datastore manager facility.
 This can be done by adding the following to your Sharemind Emulator
 configuration file:
 ```INI
@@ -170,7 +169,7 @@ execute:bob_bid.sb = Bob
 execute:charlie_result.sb = Charlie
 ```
 
-And finally we allow access to some key-value pairs in the keydb database.
+And finally, we allow access to some key-value pairs in the keydb database.
 ```INI
 [Ruleset sharemind:keydb]
 a:write:* = Alice
@@ -205,7 +204,7 @@ void main() {
     keydb_disconnect();
 }
 ```
-At the start we have some imports, which I will explain:
+At the start, we have some imports, which I will explain:
   * shared3p -- the definition of the shared3p protection domain kind.
   * keydb -- for the keydb functions using public data (in our case
     `keydb_connect(string)` and `keydb_close()`).
@@ -217,27 +216,27 @@ Then we have the definition of the security domain `pd_shared3p` of kind
 kinds, but for now you can mostly ignore that, because we use only one
 protection domain kind: `shared3p`.
 
-By the way `shared3p` means that data is secret shared between 3 parties and the
-cryptographic protocols are secure in the passive (_honest-but-curious_) security
-model.
+By the way, `shared3p` means that data is secret shared between 3 parties and
+the cryptographic protocols are secure in the passive (_honest-but-curious_)
+security model.
 
 The main entry point of the program is called `main` just like in C, however
 the arguments to the SecreC program are not given as parameters of `main`, but
 they can be obtained using the `argument(string)` function.
 
-At first we establish connection to the Redis server by using the
+First we establish connection to the Redis server by using the
 `keydb_connect(string)` function. Note that the name *dbhost* must match the
 name in the mod\_keydb configuration file.
 
-Next we declare a private variable `b` of security domain `pd_shared3p` and
+Next we declare a private variable `b` of the security domain `pd_shared3p` and
 type `uint` that is short for `uint64`, which is a 64-bit unsigned integer. In
 the same line we assign the variable with the argument named "bid" that is
 provided by the runner of the SecreC program.
 
-Then we store the private data to the Redis database under the key "a", that
+Then we store the private data to the Redis database under the key "a", this
 means we store it as Alice's bid.
 
-In the end we close the connection to Redis, but this is actually not needed in
+Lastly we close the connection to Redis, but this is actually not needed in
 this specific example, because the program is finished and the resources get
 freed anyway.
 
@@ -266,7 +265,7 @@ if (vm.count("conf")) {
     config = sm::makeUnique<sm::SystemControllerConfiguration>();
 }
 ```
-If we have a `"conf"` options specified we give that to the constructor to load
+If we have a `"conf"` option specified we give that to the constructor to load
 the configuration from that file, otherwise the client configuration is
 searched from the default locations (in this order):
  * `~/.config/sharemind/client.conf`
@@ -295,7 +294,7 @@ we also need to pass in the size of the data. For passing in arrays of data, we
 would point to the start of the array and give the size as
 `sizeof(sm::Uint64) * lengthOfArray`.
 
-Note: if conversion from `std::shared_ptr<sm::Uint64>' to
+Note: if the conversion from `std::shared_ptr<sm::Uint64>' to
 `std::shared_ptr<void>` is confusing, you should read [this
 explanation][voidptr].
 
@@ -313,8 +312,8 @@ arguments["bid"] =
         std::make_shared<std::uint64_t>(bid),
         sizeof(std::uint64_t));
 ```
-After we are finished with the arguments we just run the right bytecode program
-with the arguments and as a result we will get back the same kind of
+After we are finished with the arguments, we just run the right bytecode
+program with the arguments and as a result we will get back the same kind of
 `SystemController::ValueMap` that we used for the arguments:
 
 ```C++
@@ -355,11 +354,11 @@ void main() {
     keydb_disconnect();
 }
 ```
-We get the Alice's bid `"a"` and Bob's bid `"b"` from the database and we
-compare them. The `choose` function is a private variant of the C's ternary
-operator (`<cond> ? <true_expr> : <false_expr>`). Note that in this case we
-cannot use the typical `if/else` because that would need a public boolean to
-branch on. The `choose` function is defined in the `oblivious` module.
+We get Alice's bid `"a"` and Bob's bid `"b"` from the database and we compare
+them. The `choose` function is a private variant of the C's ternary operator
+(`<cond> ? <true_expr> : <false_expr>`). Note that in this case we cannot use
+the typical `if/else` because that would need a public boolean to branch on.
+The `choose` function is defined in the `oblivious` module.
 
 For outputting something from a SecreC program, one has to use the `publish`
 function, which sends the secret shared output back to the client application.
@@ -368,7 +367,7 @@ function, which sends the secret shared output back to the client application.
 
 ### Client side
 The [C++ code][result.cpp] for getting the result is mostly the same as for
-entering the bid. Just that now we give no arguments to the SecreC program and
+entering the bid, just that now we give no arguments to the SecreC program and
 we will get back the published results.
 
 ```C++
@@ -452,7 +451,7 @@ $ ./auction-result
 ```
 
 ## Running the examples with the Sharemind Emulator
-For running the SecreC programs with the Sharemind Emulator one needs to know
+For running the SecreC programs with the Sharemind Emulator, one needs to know
 the protocol for giving arguments and receiving the results. The argument
 stream protocol is described in a [man page][emulator protocol].
 
@@ -484,9 +483,9 @@ Emulator distribution.
 Charlie sold his house to Bob and neither Charlie nor Bob learned the amount
 Alice was willing to pay.
 
-I have shown that it is not that hard to write privacy preserving application
-with the Sharemind MPC platform. The code itself is quite simple and the
-hardest part is organizational. All parties must coordinate to configure the
-servers, generate keys for the client applications as well as for the servers
-and then exchange the public keys. Nevertheless, we are building tools to
-simplify that coordination.
+I have hopefully shown that it is not that hard to write privacy preserving
+application with the Sharemind MPC platform. The code itself is quite simple
+and the hardest part is organizational. All parties must coordinate to
+configure the servers, generate keys for the clients and the servers and then
+exchange the public keys. However, we are building tools to simplify that
+coordination.
