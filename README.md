@@ -72,7 +72,7 @@ I am not going to go over the whole Sharemind MPC configuration, because this
 should be covered in the manuals shipped with the platform.
 
 However, I will cover the following:
- * [key pair generation](#key-generation)
+ * [key generation](#key-generation)
  * [keydb module configuration](#keydb-module-configuration)
  * [access control](#access-control)
 
