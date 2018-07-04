@@ -471,7 +471,7 @@ aliceWon = [False]
 winningBid = [1100]
 ```
 
-Here we piped the emulator output through `argument-stream-decipher.py`to make
+Here we piped the emulator output through `argument-stream-decipher.py` to make
 the output human readable. This [file][argument-decipher] is available as part
 of the Sharemind Emulator distribution.
 
