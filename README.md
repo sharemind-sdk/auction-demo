@@ -248,8 +248,8 @@ is:
 Instead of storing the bid to the database with key "a" we store the bid to
 "b", which corresponds to Bob's bid.
 
-[Alicebid]: https://github.com/sharemind-sdk/url/to/file
-[Bobbid]: https://github.com/sharemind-sdk/url/to/file
+[Alicebid]: https://github.com/sharemind-sdk/auction-demo/blob/master/secrec/alice_bid.sc
+[Bobbid]: https://github.com/sharemind-sdk/auction-demo/blob/master/secrec/bob_bid.sc
 
 ### Client side
 
@@ -321,7 +321,7 @@ sm::SystemController::ValueMap results = c.runCode(bytecode[bidder], arguments);
 Note that `bytecode[bidder]` evaluates to `"alice_bid.sb"` or `"bob_bid.sb"`
 depending on the command line arguments.
 
-[bid.cpp]: https://github.com/sharemind-sdk/url/to/file
+[bid.cpp]: https://github.com/sharemind-sdk/auction-demo/blob/master/src/bid.cpp
 [progopt]: https://www.boost.org/doc/libs/1_67_0/doc/html/program_options.html
 [voidptr]: http://shanekirk.com/2017/11/c-stdshared_ptrvoid/
 
@@ -362,7 +362,7 @@ The `choose` function is defined in the `oblivious` module.
 For outputting something from a SecreC program, one has to use the `publish`
 function, which sends the secret shared output back to the client application.
 
-[result.sc]: https://github.com/sharemind-sdk/url/to/file
+[result.sc]: https://github.com/sharemind-sdk/auction-demo/blob/master/secrec/charlie_result.sc
 
 ### Client side
 The [C++ code][result.cpp] for getting the result is mostly the same as for
@@ -391,7 +391,7 @@ logger.info() << "The winner is "
     << ".";
 ```
 
-[result.cpp]: https://github.com/sharemind-sdk/url/to/file
+[result.cpp]: https://github.com/sharemind-sdk/auction-demo/blob/master/src/result.cpp
 
 ## Demonstration
 ### Alice enters the bid
@@ -471,11 +471,12 @@ aliceWon = [False]
 winningBid = [1100]
 ```
 
-Here we piped the emulator output through `argument-stream-decipher.py` to make
-the output human readable. This file is available as part of the Sharemind
-Emulator distribution.
+Here we piped the emulator output through `argument-stream-decipher.py`to make
+the output human readable. This [file][argument-decipher] is available as part
+of the Sharemind Emulator distribution.
 
 [emulator protocol]: https://github.com/sharemind-sdk/emulator/blob/master/doc/sharemind-emulator.h2m
+[argument-decipher]: https://github.com/sharemind-sdk/emulator/blob/master/doc/argument-stream-decipher.py
 
 ## Conclusion
 
