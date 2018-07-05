@@ -293,7 +293,7 @@ we also need to pass in the size of the data. For passing in arrays of data, we
 would point to the start of the array and give the size as
 `sizeof(sm::Uint64) * lengthOfArray`.
 
-Note: if the conversion from `std::shared_ptr<sm::Uint64>' to
+Note: if the conversion from `std::shared_ptr<sm::Uint64>` to
 `std::shared_ptr<void>` is confusing, you should read [this
 explanation][voidptr].
 
