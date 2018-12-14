@@ -258,10 +258,10 @@ parsing using [Boost's program\_options][progopt]. After that we load the
 Sharemind Controller configuration with the following lines:
 ```C++
 if (vm.count("conf")) {
-    config = sm::makeUnique<sm::SystemControllerConfiguration>(
+    config = std::make_unique<sm::SystemControllerConfiguration>(
                  vm["conf"].as<std::string>());
 } else {
-    config = sm::makeUnique<sm::SystemControllerConfiguration>();
+    config = std::make_unique<sm::SystemControllerConfiguration>();
 }
 ```
 If we have a `"conf"` option specified we give that to the constructor to load

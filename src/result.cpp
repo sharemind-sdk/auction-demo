@@ -28,9 +28,6 @@
 #include <sharemind/controller/SystemController.h>
 #include <sharemind/controller/SystemControllerConfiguration.h>
 #include <sharemind/controller/SystemControllerGlobals.h>
-#include <sharemind/DebugOnly.h>
-#include <sharemind/GlobalDeleter.h>
-#include <sharemind/MakeUnique.h>
 #include <sstream>
 #include <string>
 
@@ -79,10 +76,10 @@ int main(int argc, char ** argv) {
             return EXIT_SUCCESS;
         }
         if (vm.count("conf")) {
-            config = sm::makeUnique<sm::SystemControllerConfiguration>(
+            config = std::make_unique<sm::SystemControllerConfiguration>(
                          vm["conf"].as<std::string>());
         } else {
-            config = sm::makeUnique<sm::SystemControllerConfiguration>();
+            config = std::make_unique<sm::SystemControllerConfiguration>();
         }
     } catch(std::exception& e) {
         std::cerr << e.what() << std::endl;
