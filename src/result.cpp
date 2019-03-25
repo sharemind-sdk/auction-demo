@@ -33,25 +33,6 @@
 
 namespace sm = sharemind;
 
-struct ExtraIndentExceptionFormatter {
-
-    template <typename OutStream>
-    void operator()(std::size_t const exceptionNumber,
-                    std::size_t const totalExceptions,
-                    std::exception_ptr e,
-                    OutStream out) noexcept
-    {
-        assert(e);
-        out << "    ";
-        return LogHard::Logger::StandardFormatter()(
-                    exceptionNumber,
-                    totalExceptions,
-                    std::move(e),
-                    std::forward<OutStream>(out));
-    }
-
-};
-
 int main(int argc, char ** argv) {
     std::unique_ptr<sm::SystemControllerConfiguration> config;
 
@@ -125,7 +106,7 @@ int main(int argc, char ** argv) {
                     std::rethrow_exception(std::move(ep));
                 } catch (...) {
                     logger.printCurrentException<LogHard::Priority::Fatal>(
-                                ExtraIndentExceptionFormatter());
+                            LogHard::Logger::StandardExceptionFormatter(4u));
                 }
             }
         }
